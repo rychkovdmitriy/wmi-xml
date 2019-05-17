@@ -2,13 +2,20 @@
 
 Данные скрипты разными способоами формируют XML файлы:
 1) Файл **Wmi-XmlPs.ps1**
-Использует WMI  запрос  можно сказать в одну строчку получаем то что нужно:
+Плюсы:
+  Получаем результат в одну строку
+  Можем получить как объект XML , так и сразу конвертнуть в String добавив -as String
+Минусы:
+  Основной минус что не обрабатываются результаты, как получили так и выводим(лишние пробелы вначале и вконце не удаляеи и тп)
+  Формат XML файла не всегда удобен
+
+Простой пример:
 ```powershell
 Get-WmiObject -Class Win32_BIOS  | 
 Select-Object PSComputerName,Name,SerialNumber,Version,Description,SMBIOSBIOSVersion,SMBIOSMajorVersion
 | ConvertTo-XML -NoTypeInformation -as String
 ```
-В результате получится файл вида:
+В результате получится готовый текстовый вывод такого вида:
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <Objects>
@@ -27,7 +34,14 @@ Select-Object PSComputerName,Name,SerialNumber,Version,Description,SMBIOSBIOSVer
 2) Файл **Wmi-XmlDocument.ps1**
 
 Получаем WMI данные и заполняем  XmlDocument
-Для удобства есть функция которая получает класс WMI и массив атрибутов:
+Плюсы:
+  Можем максимально управлять тем какой нам XML файл сформировать
+  Можем обработать значение перед вставкой в XML (убрать ненужные символы, объеденить данные при необходимости)
+ Минусы
+  Необходимо написать больше кода
+
+
+Для удобства пишем метод класса, который получает класс WMI и массив атрибутов:
 ```powershell
 [xml] GetWmiXml([string] $wmiClassName,[System.Object[]] $wmiAttr)
     {
@@ -51,7 +65,7 @@ Select-Object PSComputerName,Name,SerialNumber,Version,Description,SMBIOSBIOSVer
 
     }
 ```
-Благодаря данной функции  получаем XML файл, достаточно кратко:
+Благодаря данному методу  получаем XML файл, достаточно кратко:
 ```powershell
         $attribCpu = @("PSComputerName","Manufacturer","Name","DeviceID",
         "NumberOfCores","NumberOfLogicalProcessors","CurrentClockSpeed","L2CacheSize","L3CacheSize")
@@ -116,8 +130,13 @@ class clsWmiXmlDocument
 2) Файл **Wmi-XmlDocument.ps1**
 
 Аналагично предидущему, получаем с помощью запроса WMI данные , и заполняем уже таблицу DataTable
-Это может быть удобно, если данные хотим передать в базу данных.
-
+Плюсы
+  Удобно, если данные хотим передать в базу данных
+  Можем обработать значение перед вставкой в XML (убрать ненужные символы, объеденить данные при необходимости)
+Минусы
+  Необходимо написать больше кода
+  Для преобразования в XML нужно написать еще один метод
+  
 Простой пример:
 ```powershell
 class clsWmiXmlDataTable
