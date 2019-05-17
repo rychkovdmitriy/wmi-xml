@@ -3,13 +3,13 @@
 Данные скрипты разными способоами формируют XML файлы:
 1) Файл Wmi-XmlPs.ps1
 Использует WMI  запрос  можно сказать в одну строчку получаем то что нужно:
-
+```
 Get-WmiObject -Class Win32_BIOS  | 
 Select-Object PSComputerName,Name,SerialNumber,Version,Description,SMBIOSBIOSVersion,SMBIOSMajorVersion
 | ConvertTo-XML -NoTypeInformation -as String
-
+```
 В результате получится файл вида:
-
+```
 <?xml version="1.0" encoding="utf-8"?>
 <Objects>
   <Object>
@@ -21,13 +21,14 @@ Select-Object PSComputerName,Name,SerialNumber,Version,Description,SMBIOSBIOSVer
     <Property Name="SMBIOSBIOSVersion">080016 </Property>
     <Property Name="SMBIOSMajorVersion">2</Property>
   </Object>
-
+```
 Такой вариант получается самым простым сопобом с помощью  ConvertTo-XML
 
 2) Файл Wmi-XmlDocument.ps1
 
 Получаем WMI данные и заполняем  XmlDocument
 Для удобства есть функция которая получает класс WMI и массив атрибутов:
+```
 [xml] GetWmiXml([string] $wmiClassName,[System.Object[]] $wmiAttr)
     {
 
@@ -49,17 +50,17 @@ Select-Object PSComputerName,Name,SerialNumber,Version,Description,SMBIOSBIOSVer
         return $xml
 
     }
-
+```
 Благодаря данной функции  получаем XML файл, достаточно кратко:
-
+```
         $attribCpu = @("PSComputerName","Manufacturer","Name","DeviceID",
         "NumberOfCores","NumberOfLogicalProcessors","CurrentClockSpeed","L2CacheSize","L3CacheSize")
         
         GetWmiXml("Win32_Processor",$attribCpu)
-        
+```
         
 Упрощенный пример:
-
+```
 class clsWmiXmlDocument
 {
         [xml] GetWmiXml([string] $wmiClassName,[System.Object[]] $wmiAttr)
@@ -95,9 +96,9 @@ class clsWmiXmlDocument
     [clsWmiXmlDocument] $wmi = [clsWmiXmlDocument]::new()
     $wmi.GetBiosXml().OuterXml
 
-
+```
 В результате получится файл вида:
-
+```
 <Objects>
   <Win32_BIOS>
     <PSComputerName>WIN-E3RPT5J1UC0</PSComputerName>
@@ -111,3 +112,4 @@ class clsWmiXmlDocument
   </Win32_BIOS>
 </Objects>
 
+```
