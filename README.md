@@ -113,3 +113,107 @@ class clsWmiXmlDocument
 </Objects>
 
 ```
+2) Файл **Wmi-XmlDocument.ps1**
+
+Аналагично предидущему, получаем с помощью запроса WMI данные , и заполняем уже таблицу DataTable
+Это может быть удобно, если данные хотим передать в базу данных.
+
+Простой пример:
+```powershell
+class clsWmiXmlDataTable
+{
+    [System.Data.DataTable] CreateTable([string] $sTabName,[System.Object[]] $arrCol)
+    {
+        [System.Data.DataTable] $tab = [System.Data.DataTable]::New($sTabName)
+ 
+        foreach ($col in $arrCol ) 
+        {
+           $tab.Columns.Add($col,([string]))
+        }
+        return $tab
+    }
+
+    [System.Data.DataTable] GetWmiTab([string] $wmiClassName,[System.Object[]] $wmiAttr)
+    {
+
+        $tabWmi = $this.CreateTable($wmiClassName,$wmiAttr)
+        $wmiObj = Get-CimInstance -Class $wmiClassName  -ComputerName $env:COMPUTERNAME | Select-Object $wmiAttr
+        if($wmiObj -eq $null)
+        {
+            return $null
+        }
+       
+       $wmiObj |%{
+            $row = $tabWmi.NewRow()
+            foreach($col in $tabWmi.Columns)
+            {
+                $colName = $col.ToString()
+                Try
+                {
+                    $value =  $_.($colName)
+                }
+                catch
+                {
+                    $value = ""
+                }
+                $row[$colName] = $value
+
+            }
+            $tabWmi.Rows.Add($row)
+        }
+        return $tabWmi
+
+    }
+    
+    [System.Data.DataTable] GetBiosTab()
+    {
+        $attribBios = @("PSComputerName","Manufacturer","Name","SerialNumber","Version","Description","SMBIOSBIOSVersion","SMBIOSMajorVersion")
+        return $this.GetWmiTab("Win32_BIOS",$attribBios)
+    }
+
+ }
+
+ 
+[clsWmiXmlDataTable] $wmi = [clsWmiXmlDataTable]::new()
+$wmi.GetBiosTab()
+```
+
+Результат будет таким:
+```
+PSComputerName     : WIN-E3RPT5J1UC0
+Manufacturer       : American Megatrends Inc.
+Name               : Default System BIOS
+SerialNumber       : SN0988MPQ
+Version            : 030717 - 20170307
+Description        : Default System BIOS
+SMBIOSBIOSVersion  : 080016 
+SMBIOSMajorVersion : 2
+```
+
+Из таблицы так же можно получить XML документ, с помощью метода:
+```powershell
+    [string] GetXmlString( [System.Data.DataTable] $tab)
+    {
+         [System.IO.StringWriter] $writer = [System.IO.StringWriter]::new()
+         [System.Data.DataSet] $ds = [System.Data.DataSet]::New("Objects")
+         $ds.Tables.Add($tab)
+         $ds.WriteXml($writer)
+         return $writer.ToString()
+    }
+```
+
+В результате опять XML:
+```xml
+<Objects>
+  <Win32_BIOS>
+    <PSComputerName>WIN-E3RPT5J1UC0</PSComputerName>
+    <Manufacturer>American Megatrends Inc.</Manufacturer>
+    <Name>Default System BIOS</Name>
+    <SerialNumber>SN0988MPQ</SerialNumber>
+    <Version>030717 - 20170307</Version>
+    <Description>Default System BIOS</Description>
+    <SMBIOSBIOSVersion>080016 </SMBIOSBIOSVersion>
+    <SMBIOSMajorVersion>2</SMBIOSMajorVersion>
+  </Win32_BIOS>
+</Objects>
+```
