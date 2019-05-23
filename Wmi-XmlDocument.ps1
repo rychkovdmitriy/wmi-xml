@@ -6,14 +6,13 @@ class clsWmiXmlDocument
 
     clsWmiXmlDocument()
     {
-        $this.strComputerName = "."
+        $this.strComputerName = $env:COMPUTERNAME
     }
 
     clsWmiXmlDocument([string] $sComputerName)
     {
         $this.strComputerName = $sComputerName
     }
-
 
     [xml] GetWmiXml([string] $wmiClassName,[System.Object[]] $wmiAttr)
     {
@@ -60,7 +59,6 @@ class clsWmiXmlDocument
         return $xml
     }
 
-   
     [string] GetXmlValue($value)
     {
         [string] $xmlValue = ""
@@ -169,8 +167,6 @@ class clsWmiXmlDocument
     }
 
 }
-
-
 
 [clsWmiXmlDocument] $wmi = [clsWmiXmlDocument]::new($COMP_NAME)
 $wmi.GetXmlString($wmi.GetCpuXml())
