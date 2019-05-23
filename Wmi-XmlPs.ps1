@@ -6,7 +6,7 @@ class clsWmiPs
 
     clsWmiPs()
     {
-        $this.strComputerName = "."
+        $this.strComputerName =  $env:COMPUTERNAME
     }
 
     clsWmiPs([string] $sComputerName)
@@ -21,22 +21,22 @@ class clsWmiPs
 
     [xml] GetCpuXml()
     {
-        return Get-WmiObject -Class Win32_Processor -ComputerName $this.strComputerName | Select-Object  PSComputerName,Manufacturer,Name,DeviceID,NumberOfCores,NumberOfLogicalProcessors,CurrentClockSpeed,L2CacheSize,L3CacheSize | ConvertTo-XML -NoTypeInformation  
+        return Get-WmiObject -Class Win32_Processor -ComputerName $this.strComputerName | Select-Object  PSComputerName,Manufacturer,Name,DeviceID,NumberOfCores,NumberOfLogicalProcessors,CurrentClockSpeed,L2CacheSize,L3CacheSize | ConvertTo-XML -NoTypeInformation
     }
 
     [xml] GetBiosXml()
     {
-        return Get-WmiObject -Class Win32_BIOS -ComputerName $this.strComputerName  | Select-Object PSComputerName,Name,SerialNumber,Version,Description,SMBIOSBIOSVersion,SMBIOSMajorVersion | ConvertTo-XML -NoTypeInformation  
+        return Get-WmiObject -Class Win32_BIOS -ComputerName $this.strComputerName  | Select-Object PSComputerName,Name,SerialNumber,Version,Description,SMBIOSBIOSVersion,SMBIOSMajorVersion | ConvertTo-XML -NoTypeInformation
     }
 
     [xml] GetVideoXml()
     {
-        return Get-WmiObject -Class Win32_VideoController -ComputerName $this.strComputerName  | Select-Object PSComputerName,AdapterCompatibility,AdapterDACType,AdapterRAM,Description,DriverDate,DriverVersion,Name,VideoModeDescription,VideoProcessor |  ConvertTo-XML -NoTypeInformation  
+        return Get-WmiObject -Class Win32_VideoController -ComputerName $this.strComputerName  | Select-Object PSComputerName,AdapterCompatibility,AdapterDACType,AdapterRAM,Description,DriverDate,DriverVersion,Name,VideoModeDescription,VideoProcessor |  ConvertTo-XML -NoTypeInformation
     }
-   
+
     [xml] GetHddXml()
     {
-        return Get-WmiObject -Class Win32_DiskDrive -ComputerName $this.strComputerName  | Select-Object PSComputerName,Description,FirmwareRevision,Model,Manufacturer,Partitions,SerialNumber,Size,Status,SCSIBus,SCSILogicalUnit,SCSIPort,SCSITargetId,InterfaceType | ConvertTo-XML -NoTypeInformation 
+        return Get-WmiObject -Class Win32_DiskDrive -ComputerName $this.strComputerName  | Select-Object PSComputerName,Description,FirmwareRevision,Model,Manufacturer,Partitions,SerialNumber,Size,Status,SCSIBus,SCSILogicalUnit,SCSIPort,SCSITargetId,InterfaceType | ConvertTo-XML -NoTypeInformation
     }
 
     [xml] GetRamXml()
@@ -46,17 +46,17 @@ class clsWmiPs
 
     [xml] GetUsersXml()
     {
-        $LoggedOnUser =  Get-CimInstance -ComputerName $this.strComputerName -ClassName Win32_LoggedOnUser 
+        $LoggedOnUser =  Get-CimInstance -ComputerName $this.strComputerName -ClassName Win32_LoggedOnUser
         return ( Get-CimInstance  -ComputerName $this.strComputerName -ClassName Win32_LogonSession | ? { $_.LogonType -eq 2 -or  $_.LogonType -eq 10} | %{
                   $id = $_.LogonId
                   $usr = $LoggedOnUser | ? { $_.Dependent.LogonId -eq $id}
-                            if($usr -ne $null) 
+                            if($usr -ne $null)
                             {
                                 New-Object -TypeName psobject -Property @{
                                     PSComputerName = $this.strComputerName
                                     StartTime =  $_.StartTime.ToString()
                                     DomainName = $usr.Antecedent.Domain
-                                    UserName = $usr.Antecedent.Name 
+                                    UserName = $usr.Antecedent.Name
                                 }
                             }
 
@@ -67,7 +67,6 @@ class clsWmiPs
     {
          return $xml.OuterXml
     }
-
 
 }
 
@@ -81,5 +80,3 @@ $wmi.GetXmlString( $wmi.GetHddXml())
 $wmi.GetXmlString( $wmi.GetRamXml())
 $wmi.GetXmlString( $wmi.GetIpXml())
 $wmi.GetXmlString( $wmi.GetUsersXml())
-
-
