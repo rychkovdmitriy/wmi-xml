@@ -7,7 +7,7 @@
 [string] $DB_USER_PASS_MYSQL     = "Pass#123456"
 
 
-[string] $SRV_PATH               = "\\ptr-hb-s-smb.nis.edu.kz\"
+[string] $SRV_PATH               = "\\ptr-hb-s-smb.dima.edu.qz\"
 [string] $strMySqlPath           = "C:\Program Files (x86)\MySQL\MySQL Connector Net 8.0.15\Assemblies\v4.5.2\MySQL.Data.dll"
 
 if(Test-Path -Path $strMySqlPath)
