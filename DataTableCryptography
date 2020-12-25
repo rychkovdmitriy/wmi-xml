@@ -1,0 +1,61 @@
+<#
+"System.Security.Cryptography.RijndaelManaged"
+"System.Security.Cryptography.AesManaged"
+#>
+class SaveDataToXml
+{
+    [System.Data.DataTable]  $dataTable
+    [byte[]] $bKey
+    [byte[]] $bIV
+    [System.Security.Cryptography.ICryptoTransform] $encryptor 
+    [System.Security.Cryptography.ICryptoTransform] $decryptor 
+
+    SaveDataToXml()
+    {
+    }
+
+    SaveDataToXml([string] $strKey,[string] $strIV,[string] $CryptographyProviderName)
+    {
+    	[System.Text.UnicodeEncoding] $unicodeText = [System.Text.UnicodeEncoding]::new()
+	    [byte[]] $this.bKey = $unicodeText.GetBytes($strKey)
+        [byte[]] $this.bIV = $unicodeText.GetBytes($strIV)
+
+        $CryptographyProvider = New-Object -TypeName $CryptographyProviderName
+        $this.encryptor  = $CryptographyProvider.CreateEncryptor($this.bKey, $this.bIV)
+        $this.decryptor  = $CryptographyProvider.CreateDecryptor($this.bKey, $this.bIV)
+    }
+    CreateTable([string] $tableName)
+    {
+        [System.Data.DataTable]  $this.dataTable = [System.Data.DataTable]::new($tableName)
+        $this.dataTable.Columns.Add("UserName")
+        $this.dataTable.Rows.Add("User1")
+        $this.dataTable.Rows.Add("User2")
+    }
+
+    EncryptFile([string] $FilePath)
+    {
+
+        [System.IO.FileStream] $fs = [System.IO.File]::OpenWrite($FilePath)
+	    [System.Security.Cryptography.CryptoStream] $strm = [System.Security.Cryptography.CryptoStream]::New($fs, $this.encryptor, [System.Security.Cryptography.CryptoStreamMode]::Write)
+        $this.dataTable.WriteXml($strm)
+	    $strm.Close()
+        $fs.Close()
+    }
+
+    [System.Data.DataSet] DecryptFile([string] $FilePath)
+    {
+	    [System.Data.DataSet] $DataSet = [System.Data.DataSet]::New()
+        [System.IO.FileStream] $fs = [System.IO.File]::OpenRead($FilePath)
+	    [System.Security.Cryptography.CryptoStream] $strm = [System.Security.Cryptography.CryptoStream]::new($fs, $this.decryptor, [System.Security.Cryptography.CryptoStreamMode]::Read)
+	    $DataSet.ReadXml($strm)
+        $strm.Close()
+	    $fs.Close()
+	    return  $DataSet
+    }
+}
+$FilePath = "C:\Temp\Users.txt"
+[SaveDataToXml] $dtToXml = [SaveDataToXml]::new("12345678","87654321","System.Security.Cryptography.AesManaged")
+$dtToXml.CreateTable("Users")
+$dtToXml.EncryptFile($FilePath)
+$dt1 = $dtToXml.DecryptFile($FilePath)
+$dt1.Tables["Users"]
